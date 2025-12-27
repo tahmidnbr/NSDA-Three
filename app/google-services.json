@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "490733460302",
+    "project_id": "nsda-three-5469c",
+    "storage_bucket": "nsda-three-5469c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:490733460302:android:ccd42ef6886e79b58edc1f",
+        "android_client_info": {
+          "package_name": "com.example.nsdathree"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCXLzxelWVznHsjjYvXkhjEJEV9kO306Uk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
