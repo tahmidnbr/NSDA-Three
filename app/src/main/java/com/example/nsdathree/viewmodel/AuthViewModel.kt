@@ -1,5 +1,6 @@
 package com.example.nsdathree.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.example.nsdathree.model.User
 import com.example.nsdathree.repository.AuthRepository
@@ -9,7 +10,7 @@ class AuthViewModel(
 
 ) : ViewModel() {
 
-    private val authRepo: AuthRepository = AuthRepository(),
+    private val authRepo: AuthRepository = AuthRepository()
     private val userRepo: UserRepository = UserRepository()
 
     fun login(
@@ -33,16 +34,23 @@ class AuthViewModel(
     ) {
         authRepo.register(email, password) { ok, err ->
             if (!ok) {
-                onError(err!!)
+                onError(err ?: "Register failed")
                 return@register
             }
 
-            val user = authRepo.currentUser() ?: return@register
+            val firebaseUser = authRepo.currentUser()
+            if (firebaseUser == null) {
+                onError("Firebase user null")
+                return@register
+            }
+
+            Log.d("Auth", "Register success: ${firebaseUser.uid}")
 
             userRepo.saveUser(
                 User(
-                    userId = user.uid,
-                    email = user.email ?: "",
+                    userId = firebaseUser.uid,
+                    email = firebaseUser.email ?: "",
+                    displayName = null,
                     latitude = lat,
                     longitude = lng
                 )
@@ -51,4 +59,5 @@ class AuthViewModel(
             onSuccess()
         }
     }
+
 }

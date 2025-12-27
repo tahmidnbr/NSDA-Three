@@ -27,6 +27,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.nsdathree.screens.FriendListScreen
+import com.google.firebase.auth.FirebaseAuth
 
 
 @Composable
@@ -47,6 +48,9 @@ fun MainScreen(
 fun FabMenu(
     navController: NavController
 ) {
+    val currentUser = FirebaseAuth.getInstance().currentUser
+    val uid = currentUser?.uid ?: ""
+
     var expanded by remember { mutableStateOf(false) }
 
     val distance = 72.dp
@@ -89,7 +93,9 @@ fun FabMenu(
 
         SmallFloatingActionButton(
             onClick = { /* Edit */
-                navController.navigate("profile")
+                if (uid.isNotEmpty()) {
+                    navController.navigate("profile/$uid")
+                }
             },
             modifier = Modifier
                 .offset(x = leftOffset)
@@ -99,7 +105,12 @@ fun FabMenu(
         }
 
         SmallFloatingActionButton(
-            onClick = { /* Logout */ },
+            onClick = { /* Logout */
+                FirebaseAuth.getInstance().signOut()
+                navController.navigate("auth") {
+                    popUpTo("main") { inclusive = true }
+                }
+            },
             modifier = Modifier
                 .offset(x = rightOffset)
                 .alpha(alpha)

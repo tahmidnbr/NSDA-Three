@@ -1,5 +1,9 @@
 package com.example.nsdathree
 
+import android.Manifest
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,15 +23,20 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.nsdathree.repository.LocationRepository
+import com.example.nsdathree.viewmodel.AuthViewModel
 
 
 @Composable
 fun AuthScreen(
-    navController: NavController
+    navController: NavController,
+    authViewModel: AuthViewModel = viewModel()
 ){
     var clicked by remember { mutableStateOf(false) }
     val top = if (clicked) "Login"  else "Welcome"
@@ -63,8 +72,10 @@ fun AuthScreen(
 
 @Composable
 fun LoginPart(
-    navController: NavController
+    navController: NavController,
+    authViewModel: AuthViewModel = viewModel()
 ){
+    val context = LocalContext.current
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -99,15 +110,23 @@ fun LoginPart(
 
         Button(
             onClick = {
-                navController.navigate("main")
-            },
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 18.dp)
+                authViewModel.login(
+                    email = email,
+                    password = pass,
+                    onSuccess = {
+                        navController.navigate("main") {
+                            popUpTo("auth") { inclusive = true }
+                        }
+                    },
+                    onError = {
+                        Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+                    }
+                )
+            }
         ) {
             Text("Login")
         }
+
 
         Spacer(modifier = Modifier.height(12.dp))
     }
@@ -115,8 +134,20 @@ fun LoginPart(
 
 @Composable
 fun RegPart(
-    navController: NavController
+    navController: NavController,
+    authViewModel: AuthViewModel = viewModel()
 ){
+    val context = LocalContext.current
+    val locationRepo = remember { LocationRepository(context) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (!granted) {
+            Toast.makeText(context, "Location permission required", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -164,15 +195,39 @@ fun RegPart(
 
         Button(
             onClick = {
-                navController.navigate("main")
-            },
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 18.dp)
+                if (pass != con) {
+                    Toast.makeText(context, "Passwords do not match", Toast.LENGTH_SHORT).show()
+                    return@Button
+                }
+
+                permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+
+                locationRepo.getLastLocation(
+                    onSuccess = { latLng ->
+                        authViewModel.register(
+                            email = email,
+                            password = pass,
+                            lat = latLng.latitude,
+                            lng = latLng.longitude,
+                            onSuccess = {
+                                navController.navigate("main") {
+                                    popUpTo("auth") { inclusive = true }
+                                }
+                            },
+                            onError = {
+                                Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                    },
+                    onError = {
+                        Toast.makeText(context, "Enable location permission", Toast.LENGTH_SHORT).show()
+                    }
+                )
+            }
         ) {
             Text("Register")
         }
+
 
         Spacer(modifier = Modifier.height(12.dp))
     }
