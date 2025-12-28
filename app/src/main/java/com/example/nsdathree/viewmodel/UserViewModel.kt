@@ -25,6 +25,11 @@ class UserViewModel() : ViewModel() {
         latitude: Double,
         longitude: Double
     ) {
+        // DO NOT save invalid coordinates
+        if (
+            latitude !in -90.0..90.0 ||
+            longitude !in -180.0..180.0
+        ) return
         repository.updateLocation(userId, latitude, longitude)
     }
 
